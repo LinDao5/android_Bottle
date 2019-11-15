@@ -20,12 +20,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
@@ -76,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
     JSONObject object = new JSONObject();
     List<String> coordinateList  = null;
 
+    ViewGroup container;
+
 
     private RequestQueue mRequestQueue;
     private StringRequest mStringRequest;
@@ -97,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         btnUpload = (Button)findViewById(R.id.btnUpload);
         btnClick = (Button)findViewById(R.id.btnClick);
         imvPic = (ImageView)findViewById(R.id.imvPic);
+        container = (ViewGroup) findViewById(R.id.container);
     }
 
 
@@ -127,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
+    // upload base64 String and receive data using API
     public void sendAndRequestResponse(){
 
         Log.i(TAG, object.toString());
@@ -144,22 +150,26 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONObject response) {
                         Log.d(TAG, response.toString());
-                       dialog.hide();
+                        dialog.hide();
                         List<String> responseList = new ArrayList<String>();
                         try {
-                           JSONArray predictions = response.getJSONArray("predictions");
-                           for (int i = 0; i < predictions.length(); i++){
-                               JSONObject predictionObj = predictions.getJSONObject(i);
+                            JSONArray predictions = response.getJSONArray("predictions");
+                            for (int i = 0; i < predictions.length(); i++){
+                                JSONObject predictionObj = predictions.getJSONObject(i);
 //                               Log.d(TAG, "sendAndRequestResponse : " + predictionObj.toString());
-                               JSONArray detectionArray = predictionObj.getJSONArray("detection_boxes");
-                               Log.d(TAG, "sendAndRequestResponse" + detectionArray.toString());
-                               for (int j = 0; j < detectionArray.length(); j++){
-                                   coordinateList = new ArrayList<String>();
-                                   coordinateList.add( detectionArray.getString(i));
-                                   Log.d(TAG, "sendAndRequestResponse " + coordinateList.toString());
+                                JSONArray detectionArray = predictionObj.getJSONArray("detection_boxes");
+                                Log.d(TAG, "sendAndRequestResponse" + detectionArray.toString());
+                                for (int j = 0; j < detectionArray.length(); j++){
+                                    coordinateList = new ArrayList<String>();
+                                    coordinateList.add( detectionArray.getString(i));
+                                    Log.d(TAG, "sendAndRequestResponse " + coordinateList.toString());
+                                    int x = coordinateList.indexOf(j);
+//                                   Log.d(TAG, "sendAndRequestResponse : x :" + x);
 //                                   displayImageView(0.2,0.5,0.7,0.8);
-                               }
-                           }
+                                    Toast.makeText(MainActivity.this, coordinateList.toString(), Toast.LENGTH_SHORT).show();
+                                    displayImageView(Math.random(),Math.random(), Math.random(), Math.random());
+                                }
+                            }
                         }catch (JSONException e){
                             e.printStackTrace();
                             dialog.hide();
@@ -170,7 +180,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error){
                         dialog.hide();
-                        Toast.makeText(MainActivity.this, "Please capture the image.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, "Response Failed, Try again", Toast.LENGTH_LONG).show();
+                        displayImageView(0.2,0.5,0.7,0.8);
                         if (error.getMessage() != null) {
                             Log.i(TAG, error.getMessage());
                         } else {
@@ -421,6 +432,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+//    private void displayImageView(double ys, double xs, double ye, double xe) {
+//
+//        DisplayMetrics displayMetrics = new DisplayMetrics();
+//        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+//        int height = displayMetrics.heightPixels;
+//        int width = displayMetrics.widthPixels;
+//
+//        //LinearLayOut Setup
+//        LinearLayout linearLayout= new LinearLayout(this);
+//        linearLayout.setOrientation(LinearLayout.VERTICAL);
+//
+//        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+//                LinearLayout.LayoutParams.MATCH_PARENT);
+//        lp.setMargins((int)(width * ys), (int)(height * xs), (int)(width * ye), (int)(height * xe));
+//        linearLayout.setLayoutParams(lp);
+//
+//        //ImageView Setup
+//        ImageView imageView = new ImageView(this);
+//
+//
+//        //setting image resource
+//        imageView.setImageBitmap(photo);
+//
+//        //setting image position
+//        imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+//                LinearLayout.LayoutParams.WRAP_CONTENT));
+//
+//        //adding view to layout
+//        linearLayout.addView(imageView);
+//        //make visible to program
+//        setContentView(linearLayout);
+//    }
+
+
     private void displayImageView(double ys, double xs, double ye, double xe) {
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -428,30 +473,20 @@ public class MainActivity extends AppCompatActivity {
         int height = displayMetrics.heightPixels;
         int width = displayMetrics.widthPixels;
 
-        //LinearLayOut Setup
-        LinearLayout linearLayout= new LinearLayout(this);
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        int marginLeft = (int) (width * xs);
+        int marginTop = (int) (height * ys);
+        int marginRight = (int) (width * (1 - xe));
+        int marginBottom = (int) (height * (1 - ye));
 
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT);
-        lp.setMargins((int)(width * ys), (int)(height * xs), (int)(width * ye), (int)(height * xe));
-        linearLayout.setLayoutParams(lp);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
 
-        //ImageView Setup
-        ImageView imageView = new ImageView(this);
+        lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
+        lp.setMargins(marginLeft, marginTop, marginRight, marginBottom);
 
+        View imageView = LayoutInflater.from(MainActivity.this).inflate(R.layout.block_image, container, false);
 
-        //setting image resource
-        imageView.setImageBitmap(photo);
+        container.addView(imageView, lp);
 
-        //setting image position
-        imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        //adding view to layout
-        linearLayout.addView(imageView);
-        //make visible to program
-        setContentView(linearLayout);
     }
 
 
