@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Bottle Demo</string>
+    <string name="contact_number">+91 86192 48107</string>
+    <string name="email">contact@androidwave.com</string>
+</resources>
